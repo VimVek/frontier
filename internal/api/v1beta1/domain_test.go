@@ -17,7 +17,6 @@ import (
 )
 
 func TestHandler_CreateOrganizationDomain(t *testing.T) {
-
 	tests := []struct {
 		name    string
 		setup   func(m *mocks.DomainService)
@@ -521,7 +520,6 @@ func Test_VerifyOrganizationDomain(t *testing.T) {
 			assert.EqualValues(t, tt.wantErr, err)
 		})
 	}
-
 }
 
 func Test_ListOrganizationDomains(t *testing.T) {
@@ -613,5 +611,4 @@ func Test_ListOrganizationDomains(t *testing.T) {
 			assert.EqualValues(t, tt.wantErr, err)
 		})
 	}
-
 }

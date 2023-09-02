@@ -78,7 +78,7 @@ func Test_CreateMetaSchema(t *testing.T) {
 		wantErr error
 	}{
 		{
-			name: "should succesfully create  Meta Schema",
+			name: "should successfully create  Meta Schema",
 			setup: func(m *mocks.MetaSchemaService) {
 				m.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), metaschema.MetaSchema{
 					Name:   "some_name",
@@ -178,7 +178,6 @@ func Test_CreateMetaSchema(t *testing.T) {
 			assert.EqualValues(t, tt.wantErr, err)
 		})
 	}
-
 }
 
 func Test_GetMetaSchema(t *testing.T) {
@@ -477,5 +476,4 @@ func Test_DeleteMetaSchema(t *testing.T) {
 			assert.EqualValues(t, tt.wantErr, err)
 		})
 	}
-
 }
