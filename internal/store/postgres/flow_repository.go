@@ -68,7 +68,7 @@ func (s *FlowRepository) Set(ctx context.Context, flow *authenticate.Flow) error
 		return s.dbc.QueryRowxContext(ctx, query, params...).StructScan(&flowModel)
 	}); err != nil {
 		err = checkPostgresError(err)
-		return fmt.Errorf("%w: %s", dbErr, err)
+		return fmt.Errorf("%w: %s", ErrQueryRun, err)
 	}
 
 	return nil
@@ -90,7 +90,7 @@ func (s *FlowRepository) Get(ctx context.Context, id uuid.UUID) (*authenticate.F
 		return s.dbc.QueryRowxContext(ctx, query, params...).StructScan(&flowModel)
 	}); err != nil {
 		err = checkPostgresError(err)
-		return nil, fmt.Errorf("%w: %s", dbErr, err)
+		return nil, fmt.Errorf("%w: %s", ErrQueryRun, err)
 	}
 
 	return flowModel.transformToFlow()
@@ -112,7 +112,7 @@ func (s *FlowRepository) Delete(ctx context.Context, id uuid.UUID) error {
 			result, err := s.dbc.ExecContext(ctx, query, params...)
 			if err != nil {
 				err = checkPostgresError(err)
-				return fmt.Errorf("%w: %s", dbErr, err)
+				return fmt.Errorf("%w: %s", ErrQueryRun, err)
 			}
 
 			if count, _ := result.RowsAffected(); count > 0 {
@@ -138,7 +138,7 @@ func (s *FlowRepository) DeleteExpiredFlows(ctx context.Context) error {
 		result, err := s.dbc.ExecContext(ctx, query, params...)
 		if err != nil {
 			err = checkPostgresError(err)
-			return fmt.Errorf("%w: %s", dbErr, err)
+			return fmt.Errorf("%w: %s", ErrQueryRun, err)
 		}
 
 		count, _ := result.RowsAffected()

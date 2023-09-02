@@ -56,7 +56,7 @@ func (s ServiceUserRepository) List(ctx context.Context, flt serviceuser.Filter)
 	if err = s.dbc.WithTimeout(ctx, TABLE_SERVICEUSER, "List", func(ctx context.Context) error {
 		return s.dbc.SelectContext(ctx, &fetchedServiceUsers, query, params...)
 	}); err != nil {
-		return nil, fmt.Errorf("%w: %s", dbErr, err)
+		return nil, fmt.Errorf("%w: %s", ErrQueryRun, err)
 	}
 
 	var transformedServiceUsers []serviceuser.ServiceUser
@@ -96,7 +96,7 @@ func (s ServiceUserRepository) Create(ctx context.Context, serviceUser serviceus
 	if err = s.dbc.WithTimeout(ctx, TABLE_SERVICEUSER, "Create", func(ctx context.Context) error {
 		return s.dbc.QueryRowxContext(ctx, query, params...).StructScan(&fetchedServiceUser)
 	}); err != nil {
-		return serviceuser.ServiceUser{}, fmt.Errorf("%w: %s", dbErr, err)
+		return serviceuser.ServiceUser{}, fmt.Errorf("%w: %s", ErrQueryRun, err)
 	}
 
 	return fetchedServiceUser.transform()
@@ -129,7 +129,7 @@ func (s ServiceUserRepository) GetByID(ctx context.Context, id string) (serviceu
 		if errors.Is(err, sql.ErrNoRows) {
 			return serviceuser.ServiceUser{}, role.ErrNotExist
 		}
-		return serviceuser.ServiceUser{}, fmt.Errorf("%w: %s", dbErr, err)
+		return serviceuser.ServiceUser{}, fmt.Errorf("%w: %s", ErrQueryRun, err)
 	}
 
 	return serviceUserModel.transform()
@@ -163,7 +163,7 @@ func (s ServiceUserRepository) GetByIDs(ctx context.Context, ids []string) ([]se
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, role.ErrNotExist
 		}
-		return nil, fmt.Errorf("%w: %s", dbErr, err)
+		return nil, fmt.Errorf("%w: %s", ErrQueryRun, err)
 	}
 
 	var transformedUsers []serviceuser.ServiceUser

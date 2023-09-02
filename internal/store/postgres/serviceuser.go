@@ -61,11 +61,15 @@ func (s ServiceUserCredential) transform() (serviceuser.Credential, error) {
 	var keySet jwk.Set
 	if len(s.SecretHash.String) == 0 {
 		// if a secret hash is created, public key would be null
-		set, err := jwk.Parse(s.PublicKey)
-		if err != nil {
-			return serviceuser.Credential{}, fmt.Errorf("failed to parse public key: %w", err)
+		if s.PublicKey != nil && string(s.PublicKey) != "null" {
+			set, err := jwk.Parse(s.PublicKey)
+			if err != nil {
+				return serviceuser.Credential{}, fmt.Errorf("failed to parse public key: %w", err)
+			}
+			keySet = set
+		} else {
+			keySet = jwk.NewSet()
 		}
-		keySet = set
 	}
 
 	return serviceuser.Credential{

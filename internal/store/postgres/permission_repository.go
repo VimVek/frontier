@@ -51,7 +51,7 @@ func (r PermissionRepository) Get(ctx context.Context, id string) (permission.Pe
 		if errors.Is(err, sql.ErrNoRows) {
 			return permission.Permission{}, permission.ErrNotExist
 		}
-		return permission.Permission{}, fmt.Errorf("%w: %s", dbErr, err)
+		return permission.Permission{}, fmt.Errorf("%w: %s", ErrQueryRun, err)
 	}
 
 	return fetchedPermission.transformToPermission()
@@ -74,7 +74,7 @@ func (r PermissionRepository) GetBySlug(ctx context.Context, slug string) (permi
 		if errors.Is(err, sql.ErrNoRows) {
 			return permission.Permission{}, permission.ErrNotExist
 		}
-		return permission.Permission{}, fmt.Errorf("%w: %s", dbErr, err)
+		return permission.Permission{}, fmt.Errorf("%w: %s", ErrQueryRun, err)
 	}
 
 	return fetchedPermission.transformToPermission()
@@ -149,7 +149,7 @@ func (r PermissionRepository) List(ctx context.Context, flt permission.Filter) (
 		if errors.Is(err, sql.ErrNoRows) {
 			return []permission.Permission{}, nil
 		}
-		return []permission.Permission{}, fmt.Errorf("%w: %s", dbErr, err)
+		return []permission.Permission{}, fmt.Errorf("%w: %s", ErrQueryRun, err)
 	}
 
 	var transformedPermissions []permission.Permission

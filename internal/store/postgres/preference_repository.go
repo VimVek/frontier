@@ -52,7 +52,7 @@ func (s *PreferenceRepository) Set(ctx context.Context, pref preference.Preferen
 		return s.dbc.QueryRowxContext(ctx, query, params...).StructScan(&prefModel)
 	}); err != nil {
 		err = checkPostgresError(err)
-		return preference.Preference{}, fmt.Errorf("%w: %s", dbErr, err)
+		return preference.Preference{}, fmt.Errorf("%w: %s", ErrQueryRun, err)
 	}
 
 	return prefModel.transformToPreference(), nil
@@ -77,7 +77,7 @@ func (s *PreferenceRepository) Get(ctx context.Context, id uuid.UUID) (preferenc
 		case errors.Is(err, sql.ErrNoRows):
 			return preference.Preference{}, preference.ErrNotFound
 		}
-		return preference.Preference{}, fmt.Errorf("%w: %s", dbErr, err)
+		return preference.Preference{}, fmt.Errorf("%w: %s", ErrQueryRun, err)
 	}
 
 	return prefModel.transformToPreference(), nil
@@ -121,7 +121,7 @@ func (s *PreferenceRepository) List(ctx context.Context, flt preference.Filter) 
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil
 		}
-		return nil, fmt.Errorf("%w: %s", dbErr, err)
+		return nil, fmt.Errorf("%w: %s", ErrQueryRun, err)
 	}
 
 	var transformedPreferences []preference.Preference

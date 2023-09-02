@@ -69,7 +69,7 @@ func (s *InvitationRepository) Set(ctx context.Context, invite invitation.Invita
 		return s.dbc.QueryRowxContext(ctx, query, params...).StructScan(&inviteModel)
 	}); err != nil {
 		err = checkPostgresError(err)
-		return fmt.Errorf("%w: %s", dbErr, err)
+		return fmt.Errorf("%w: %s", ErrQueryRun, err)
 	}
 
 	return nil
@@ -94,7 +94,7 @@ func (s *InvitationRepository) Get(ctx context.Context, id uuid.UUID) (invitatio
 		case errors.Is(err, sql.ErrNoRows):
 			return invitation.Invitation{}, invitation.ErrNotFound
 		}
-		return invitation.Invitation{}, fmt.Errorf("%w: %s", dbErr, err)
+		return invitation.Invitation{}, fmt.Errorf("%w: %s", ErrQueryRun, err)
 	}
 
 	return inviteModel.transformToInvitation()
@@ -125,7 +125,7 @@ func (s *InvitationRepository) List(ctx context.Context, flt invitation.Filter) 
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil
 		}
-		return nil, fmt.Errorf("%w: %s", dbErr, err)
+		return nil, fmt.Errorf("%w: %s", ErrQueryRun, err)
 	}
 
 	var transformedInvitations []invitation.Invitation
@@ -157,7 +157,7 @@ func (s *InvitationRepository) ListByUser(ctx context.Context, id string) ([]inv
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil
 		}
-		return nil, fmt.Errorf("%w: %s", dbErr, err)
+		return nil, fmt.Errorf("%w: %s", ErrQueryRun, err)
 	}
 
 	var transformedInvitations []invitation.Invitation
@@ -187,7 +187,7 @@ func (s *InvitationRepository) Delete(ctx context.Context, id uuid.UUID) error {
 		_, err := s.dbc.ExecContext(ctx, query, params...)
 		if err != nil {
 			err = checkPostgresError(err)
-			return fmt.Errorf("%w: %s", dbErr, err)
+			return fmt.Errorf("%w: %s", ErrQueryRun, err)
 		}
 
 		return nil
@@ -210,7 +210,7 @@ func (s *InvitationRepository) GarbageCollect(ctx context.Context) error {
 		result, err := s.dbc.ExecContext(ctx, query, params...)
 		if err != nil {
 			err = checkPostgresError(err)
-			return fmt.Errorf("%w: %s", dbErr, err)
+			return fmt.Errorf("%w: %s", ErrQueryRun, err)
 		}
 
 		count, _ := result.RowsAffected()

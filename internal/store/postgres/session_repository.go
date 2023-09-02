@@ -35,7 +35,7 @@ func NewSessionRepository(logger log.Logger, dbc *db.Client) *SessionRepository 
 func (s *SessionRepository) Set(ctx context.Context, session *frontiersession.Session) error {
 	userID, err := uuid.Parse(session.UserID)
 	if err != nil {
-		return fmt.Errorf("error parsing user id: %w", err)
+		return fmt.Errorf("%s: %w", err.Error(), ErrInvalidID)
 	}
 
 	marshaledMetadata, err := json.Marshal(session.Metadata)
@@ -61,7 +61,7 @@ func (s *SessionRepository) Set(ctx context.Context, session *frontiersession.Se
 		return s.dbc.QueryRowxContext(ctx, query, params...).StructScan(&sessionModel)
 	}); err != nil {
 		err = checkPostgresError(err)
-		return fmt.Errorf("%w: %s", dbErr, err)
+		return fmt.Errorf("%w: %s", ErrQueryRun, err)
 	}
 
 	return nil
@@ -83,9 +83,9 @@ func (s *SessionRepository) Get(ctx context.Context, id uuid.UUID) (*frontierses
 		err = checkPostgresError(err)
 		switch {
 		case errors.Is(err, sql.ErrNoRows):
-			return nil, fmt.Errorf("%s: %w", dbErr.Error(), frontiersession.ErrNoSession)
+			return nil, fmt.Errorf("%s: %w", ErrQueryRun.Error(), frontiersession.ErrNoSession)
 		default:
-			return nil, fmt.Errorf("%s: %w", dbErr.Error(), err)
+			return nil, fmt.Errorf("%s: %w", err.Error(), ErrQueryRun)
 		}
 	}
 
@@ -109,9 +109,9 @@ func (s *SessionRepository) Delete(ctx context.Context, id uuid.UUID) error {
 			err = checkPostgresError(err)
 			switch {
 			case errors.Is(err, sql.ErrNoRows):
-				return fmt.Errorf("%w: %s", dbErr, frontiersession.ErrNoSession)
+				return fmt.Errorf("%w: %s", ErrQueryRun, frontiersession.ErrNoSession)
 			default:
-				return fmt.Errorf("%w: %s", dbErr, err)
+				return fmt.Errorf("%w: %s", ErrQueryRun, err)
 			}
 		}
 
@@ -138,7 +138,7 @@ func (s *SessionRepository) DeleteExpiredSessions(ctx context.Context) error {
 		result, err := s.dbc.ExecContext(ctx, query, params...)
 		if err != nil {
 			err = checkPostgresError(err)
-			return fmt.Errorf("%w: %s", dbErr, err)
+			return fmt.Errorf("%w: %s", ErrQueryRun, err)
 		}
 
 		count, _ := result.RowsAffected()
@@ -164,7 +164,7 @@ func (s *SessionRepository) UpdateValidity(ctx context.Context, id uuid.UUID, va
 		result, err := s.dbc.ExecContext(ctx, query, params...)
 		if err != nil {
 			err = checkPostgresError(err)
-			return fmt.Errorf("%w: %s", dbErr, err)
+			return fmt.Errorf("%w: %s", ErrQueryRun, err)
 		}
 
 		if count, _ := result.RowsAffected(); count > 0 {

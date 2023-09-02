@@ -50,7 +50,7 @@ func (s *DomainRepository) Create(ctx context.Context, toCreate domain.Domain) (
 		if errors.Is(err, ErrDuplicateKey) {
 			return domain.Domain{}, domain.ErrDuplicateKey
 		}
-		return domain.Domain{}, fmt.Errorf("%w: %s", dbErr, err)
+		return domain.Domain{}, fmt.Errorf("%s: %w", err.Error(), ErrQueryRun)
 	}
 
 	dmn := domainModel.transform()
@@ -85,7 +85,7 @@ func (s *DomainRepository) List(ctx context.Context, flt domain.Filter) ([]domai
 		return s.dbc.SelectContext(ctx, &domains, query, params...)
 	}); err != nil {
 		err = checkPostgresError(err)
-		return nil, fmt.Errorf("%w: %s", dbErr, err)
+		return nil, fmt.Errorf("%w: %s", ErrQueryRun, err)
 	}
 
 	var result []domain.Domain
@@ -111,7 +111,7 @@ func (s *DomainRepository) Get(ctx context.Context, id string) (domain.Domain, e
 		return s.dbc.QueryRowxContext(ctx, query, params...).StructScan(&domainModel)
 	}); err != nil {
 		err = checkPostgresError(err)
-		return domain.Domain{}, fmt.Errorf("%w: %s", dbErr, err)
+		return domain.Domain{}, fmt.Errorf("%s: %w", err.Error(), ErrQueryRun)
 	}
 
 	domain := domainModel.transform()
@@ -130,7 +130,7 @@ func (s *DomainRepository) Delete(ctx context.Context, id string) error {
 		result, err := s.dbc.ExecContext(ctx, query, params...)
 		if err != nil {
 			err = checkPostgresError(err)
-			return fmt.Errorf("%w: %s", dbErr, err)
+			return fmt.Errorf("%w: %s", ErrQueryRun, err)
 		}
 
 		if count, _ := result.RowsAffected(); count > 0 {
@@ -167,7 +167,7 @@ func (s *DomainRepository) Update(ctx context.Context, toUpdate domain.Domain) (
 		case errors.Is(err, sql.ErrNoRows):
 			return domain.Domain{}, domain.ErrNotExist
 		default:
-			return domain.Domain{}, fmt.Errorf("%w: %s", dbErr, err)
+			return domain.Domain{}, fmt.Errorf("%w: %s", ErrQueryRun, err)
 		}
 	}
 
@@ -188,7 +188,7 @@ func (s *DomainRepository) DeleteExpiredDomainRequests(ctx context.Context) erro
 		result, err := s.dbc.ExecContext(ctx, query, params...)
 		if err != nil {
 			err = checkPostgresError(err)
-			return fmt.Errorf("%w: %s", dbErr, err)
+			return fmt.Errorf("%w: %s", ErrQueryRun, err)
 		}
 
 		count, _ := result.RowsAffected()

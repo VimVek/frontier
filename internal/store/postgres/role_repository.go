@@ -62,7 +62,7 @@ func (r RoleRepository) Get(ctx context.Context, id string) (role.Role, error) {
 		if errors.Is(err, sql.ErrNoRows) {
 			return role.Role{}, role.ErrNotExist
 		}
-		return role.Role{}, fmt.Errorf("%w: %s", dbErr, err)
+		return role.Role{}, fmt.Errorf("%w: %s", ErrQueryRun, err)
 	}
 
 	return roleModel.transformToRole()
@@ -91,7 +91,7 @@ func (r RoleRepository) GetByName(ctx context.Context, orgID, name string) (role
 		if errors.Is(err, sql.ErrNoRows) {
 			return role.Role{}, role.ErrNotExist
 		}
-		return role.Role{}, fmt.Errorf("%w: %s", dbErr, err)
+		return role.Role{}, fmt.Errorf("%w: %s", ErrQueryRun, err)
 	}
 
 	return roleModel.transformToRole()
@@ -169,7 +169,7 @@ func (r RoleRepository) List(ctx context.Context, flt role.Filter) ([]role.Role,
 	if err = r.dbc.WithTimeout(ctx, TABLE_ROLES, "List", func(ctx context.Context) error {
 		return r.dbc.SelectContext(ctx, &fetchedRoles, query, params...)
 	}); err != nil {
-		return []role.Role{}, fmt.Errorf("%w: %s", dbErr, err)
+		return []role.Role{}, fmt.Errorf("%w: %s", ErrQueryRun, err)
 	}
 
 	var transformedRoles []role.Role

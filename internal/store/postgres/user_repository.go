@@ -221,7 +221,7 @@ func (r UserRepository) List(ctx context.Context, flt user.Filter) ([]user.User,
 		if errors.Is(err, sql.ErrNoRows) {
 			return []user.User{}, nil
 		}
-		return []user.User{}, fmt.Errorf("%w: %s", dbErr, err)
+		return []user.User{}, fmt.Errorf("%w: %s", ErrQueryRun, err)
 	}
 
 	groupedMetadataByUser := make(map[string]user.User)
@@ -489,7 +489,7 @@ func (r UserRepository) GetByEmail(ctx context.Context, email string) (user.User
 		if errors.Is(err, sql.ErrNoRows) {
 			return user.User{}, user.ErrNotExist
 		}
-		return user.User{}, fmt.Errorf("%w: %s", dbErr, err)
+		return user.User{}, fmt.Errorf("%w: %s", ErrQueryRun, err)
 	}
 
 	transformedUser, err := fetchedUser.transformToUser()

@@ -16,9 +16,9 @@ type Repository interface {
 
 // MetaSchema represents metadata schema to be validated for users/ groups/ organisations / roles
 type MetaSchema struct {
-	ID        string
-	Name      string
-	Schema    string
+	ID        string `json:"id"`
+	Name      string `json:"name"`
+	Schema    string `json:"schema"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }

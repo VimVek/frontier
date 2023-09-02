@@ -35,15 +35,15 @@ func (a AuditRepository) Create(ctx context.Context, l *audit.Log) error {
 
 	marshaledActor, err := json.Marshal(l.Actor)
 	if err != nil {
-		return fmt.Errorf("%w: %s", parseErr, err)
+		return fmt.Errorf("%s: %w", err, parseErr)
 	}
 	marshaledTarget, err := json.Marshal(l.Target)
 	if err != nil {
-		return fmt.Errorf("%w: %s", parseErr, err)
+		return fmt.Errorf("%s: %w", err, parseErr)
 	}
 	marshaledMetadata, err := json.Marshal(l.Metadata)
 	if err != nil {
-		return fmt.Errorf("%w: %s", parseErr, err)
+		return fmt.Errorf("%s: %w", err, parseErr)
 	}
 
 	query, params, err := dialect.Insert(TABLE_AUDITLOGS).Rows(
@@ -57,7 +57,7 @@ func (a AuditRepository) Create(ctx context.Context, l *audit.Log) error {
 			"metadata": marshaledMetadata,
 		}).Returning(&Audit{}).ToSQL()
 	if err != nil {
-		return fmt.Errorf("%w: %s", queryErr, err)
+		return fmt.Errorf("%s: %w", err, queryErr)
 	}
 
 	var auditModel Audit
@@ -104,7 +104,7 @@ func (a AuditRepository) List(ctx context.Context, flt audit.Filter) ([]audit.Lo
 		case errors.Is(err, sql.ErrNoRows):
 			return nil, nil
 		default:
-			return nil, fmt.Errorf("%w: %s", dbErr, err)
+			return nil, fmt.Errorf("%s: %w", err, ErrQueryRun)
 		}
 	}
 
@@ -112,7 +112,7 @@ func (a AuditRepository) List(ctx context.Context, flt audit.Filter) ([]audit.Lo
 	for _, v := range fetched {
 		transformedGroup, err := v.transform()
 		if err != nil {
-			return nil, fmt.Errorf("%w: %s", parseErr, err)
+			return nil, fmt.Errorf("%s: %w", err, parseErr)
 		}
 		transformedLogs = append(transformedLogs, transformedGroup)
 	}
@@ -130,7 +130,7 @@ func (a AuditRepository) GetByID(ctx context.Context, id string) (audit.Log, err
 			"id": id,
 		}).Where(notDisabledGroupExp).ToSQL()
 	if err != nil {
-		return audit.Log{}, fmt.Errorf("%w: %s", queryErr, err)
+		return audit.Log{}, fmt.Errorf("%s: %w", err, queryErr)
 	}
 
 	var logModel Audit

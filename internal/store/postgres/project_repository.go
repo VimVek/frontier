@@ -217,7 +217,7 @@ func (r ProjectRepository) List(ctx context.Context, flt project.Filter) ([]proj
 		if errors.Is(err, sql.ErrNoRows) {
 			return []project.Project{}, project.ErrNotExist
 		}
-		return []project.Project{}, fmt.Errorf("%w: %s", dbErr, err)
+		return []project.Project{}, fmt.Errorf("%w: %s", ErrQueryRun, err)
 	}
 
 	var transformedProjects []project.Project
@@ -269,7 +269,7 @@ func (r ProjectRepository) UpdateByID(ctx context.Context, prj project.Project) 
 		case errors.Is(err, ErrForeignKeyViolation):
 			return project.Project{}, organization.ErrNotExist
 		default:
-			return project.Project{}, fmt.Errorf("%w: %s", dbErr, err)
+			return project.Project{}, fmt.Errorf("%w: %s", ErrQueryRun, err)
 		}
 	}
 
@@ -317,7 +317,7 @@ func (r ProjectRepository) UpdateByName(ctx context.Context, prj project.Project
 		case errors.Is(err, ErrForeignKeyViolation):
 			return project.Project{}, organization.ErrNotExist
 		default:
-			return project.Project{}, fmt.Errorf("%w: %s", dbErr, err)
+			return project.Project{}, fmt.Errorf("%w: %s", ErrQueryRun, err)
 		}
 	}
 

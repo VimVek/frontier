@@ -25,17 +25,15 @@ import (
 
 type GroupRepositoryTestSuite struct {
 	suite.Suite
-	ctx                 context.Context
-	client              *db.Client
-	pool                *dockertest.Pool
-	resource            *dockertest.Resource
-	repository          *postgres.GroupRepository
-	relationRepository  *postgres.RelationRepository
-	namespaceRepository *postgres.NamespaceRepository
-	roleRepository      *postgres.RoleRepository
-	orgs                []organization.Organization
-	groups              []group.Group
-	users               []user.User
+	ctx                context.Context
+	client             *db.Client
+	pool               *dockertest.Pool
+	resource           *dockertest.Resource
+	repository         *postgres.GroupRepository
+	relationRepository *postgres.RelationRepository
+	orgs               []organization.Organization
+	groups             []group.Group
+	users              []user.User
 }
 
 func (s *GroupRepositoryTestSuite) SetupSuite() {
@@ -56,8 +54,6 @@ func (s *GroupRepositoryTestSuite) SetupSuite() {
 	}
 
 	s.relationRepository = postgres.NewRelationRepository(s.client)
-	s.namespaceRepository = postgres.NewNamespaceRepository(s.client)
-	s.roleRepository = postgres.NewRoleRepository(s.client)
 
 	s.orgs, err = bootstrapOrganization(s.client)
 	if err != nil {

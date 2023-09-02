@@ -1,0 +1,22 @@
+[
+    {
+        "method": "maillink",
+        "email": "testmail@123.com",
+        "nonce":"randomNum01"
+    },
+    {
+        "method":    "maillink",
+        "email":     "testmail02@123.com",
+        "nonce":  "randomNum02"
+    },
+    {
+        "method": "maillink",
+        "email": "testmail03@123.com",
+        "nonce":"randomNum03"
+    },
+    {
+        "method": "maillink",
+        "email": "testmail04@123.com",
+        "nonce":"randomNum04"
+    }
+]

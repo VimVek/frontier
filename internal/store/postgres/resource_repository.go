@@ -129,7 +129,7 @@ func (r ResourceRepository) List(ctx context.Context, flt resource.Filter) ([]re
 		if errors.Is(err, ErrInvalidTextRepresentation) {
 			return []resource.Resource{}, nil
 		}
-		return []resource.Resource{}, fmt.Errorf("%w: %s", dbErr, err)
+		return []resource.Resource{}, fmt.Errorf("%w: %s", ErrQueryRun, err)
 	}
 
 	var transformedResources []resource.Resource
