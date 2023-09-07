@@ -1,0 +1,17 @@
+[
+    {
+        "name":  "domain1",
+		"token": "token01",
+		"state": "pending"
+    },
+    {
+        "name":  "domain2",
+		"token": "token03",
+		"state": "pending"
+    },
+    {
+        "name":  "domain3",
+		"token": "token04",
+		"state": "pending"
+    }
+]

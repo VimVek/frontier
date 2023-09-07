@@ -1,0 +1,18 @@
+[
+    {
+        "org_id":"org_id_01",
+        "title": "title_01",
+        "state": "enabled"
+    },
+    {
+        "org_id":"org_id_02",
+        "title": "title_02",
+        "state": "enabled"
+    },
+    {
+        "org_id":"org_id_03",
+        "title": "title_03",
+        "state": "enabled",
+        "metadata": {}
+    }
+]

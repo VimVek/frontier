@@ -42,7 +42,7 @@ type Credential struct {
 	ServiceUserID string
 
 	// SecretHash used for basic auth
-	SecretHash []byte
+	SecretHash []byte `json:"secret_hash"`
 
 	// PublicKey used for JWT verification using RSA
 	PublicKey jwk.Set

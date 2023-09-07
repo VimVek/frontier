@@ -49,6 +49,11 @@ func (s ServiceUserCredentialRepository) List(ctx context.Context, flt serviceus
 			"secret_hash": goqu.Op{"is not": nil},
 		})
 	}
+	if flt.ServiceUserID != "" {
+		stmt = stmt.Where(goqu.Ex{
+			"serviceuser_id": flt.ServiceUserID,
+		})
+	}
 
 	query, params, err := stmt.From(goqu.T(TABLE_SERVICEUSERCREDENTIALS).As("s")).ToSQL()
 	if err != nil {
@@ -59,7 +64,7 @@ func (s ServiceUserCredentialRepository) List(ctx context.Context, flt serviceus
 	if err = s.dbc.WithTimeout(ctx, TABLE_SERVICEUSERCREDENTIALS, "List", func(ctx context.Context) error {
 		return s.dbc.SelectContext(ctx, &svUserCreds, query, params...)
 	}); err != nil {
-		return nil, fmt.Errorf("%w: %s", dbErr, err)
+		return nil, fmt.Errorf("%w: %s", ErrQueryRun, err)
 	}
 
 	var transformedServiceUsers []serviceuser.Credential
@@ -103,10 +108,13 @@ func (s ServiceUserCredentialRepository) Create(ctx context.Context, credential 
 			"title":    credential.Title,
 			"metadata": marshaledMetadata,
 		})).Returning(&ServiceUserCredential{}).ToSQL()
+	if err != nil {
+		return serviceuser.Credential{}, err
+	}
 	if err = s.dbc.WithTimeout(ctx, TABLE_SERVICEUSERCREDENTIALS, "Create", func(ctx context.Context) error {
 		return s.dbc.QueryRowxContext(ctx, query, params...).StructScan(&svUserCred)
 	}); err != nil {
-		return serviceuser.Credential{}, fmt.Errorf("%w: %s", dbErr, err)
+		return serviceuser.Credential{}, fmt.Errorf("%w: %s", ErrQueryRun, err)
 	}
 
 	return svUserCred.transform()
@@ -140,7 +148,7 @@ func (s ServiceUserCredentialRepository) Get(ctx context.Context, id string) (se
 		if errors.Is(err, sql.ErrNoRows) {
 			return serviceuser.Credential{}, serviceuser.ErrCredNotExist
 		}
-		return serviceuser.Credential{}, fmt.Errorf("%w: %s", dbErr, err)
+		return serviceuser.Credential{}, fmt.Errorf("%w: %s", ErrQueryRun, err)
 	}
 
 	return svUserCredentialModel.transform()
@@ -163,12 +171,7 @@ func (s ServiceUserCredentialRepository) Delete(ctx context.Context, id string) 
 		return nil
 	}); err != nil {
 		err = checkPostgresError(err)
-		switch {
-		case errors.Is(err, sql.ErrNoRows):
-			return serviceuser.ErrCredNotExist
-		default:
-			return err
-		}
+		return err
 	}
 	return nil
 }

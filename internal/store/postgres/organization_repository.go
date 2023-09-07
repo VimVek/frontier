@@ -207,7 +207,7 @@ func (r OrganizationRepository) List(ctx context.Context, flt organization.Filte
 		if errors.Is(err, sql.ErrNoRows) {
 			return []organization.Organization{}, nil
 		}
-		return []organization.Organization{}, fmt.Errorf("%w: %s", dbErr, err)
+		return []organization.Organization{}, fmt.Errorf("%w: %s", ErrQueryRun, err)
 	}
 
 	var transformedOrgs []organization.Organization

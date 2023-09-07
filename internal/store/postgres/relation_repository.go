@@ -70,7 +70,7 @@ func (r RelationRepository) List(ctx context.Context) ([]relation.Relation, erro
 		if errors.Is(err, sql.ErrNoRows) {
 			return []relation.Relation{}, nil
 		}
-		return []relation.Relation{}, fmt.Errorf("%w: %s", dbErr, err)
+		return []relation.Relation{}, fmt.Errorf("%w: %s", ErrQueryRun, err)
 	}
 
 	var transformedRelations []relation.Relation

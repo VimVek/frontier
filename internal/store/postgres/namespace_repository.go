@@ -53,7 +53,7 @@ func (r NamespaceRepository) Get(ctx context.Context, id string) (namespace.Name
 		if errors.Is(err, sql.ErrNoRows) {
 			return namespace.Namespace{}, namespace.ErrNotExist
 		}
-		return namespace.Namespace{}, fmt.Errorf("%w: %s", dbErr, err)
+		return namespace.Namespace{}, fmt.Errorf("%w: %s", ErrQueryRun, err)
 	}
 
 	return fetchedNamespace.transformToNamespace()
@@ -114,7 +114,7 @@ func (r NamespaceRepository) List(ctx context.Context) ([]namespace.Namespace, e
 		if errors.Is(err, sql.ErrNoRows) {
 			return []namespace.Namespace{}, nil
 		}
-		return []namespace.Namespace{}, fmt.Errorf("%w: %s", dbErr, err)
+		return []namespace.Namespace{}, fmt.Errorf("%w: %s", ErrQueryRun, err)
 	}
 
 	var transformedNamespaces []namespace.Namespace

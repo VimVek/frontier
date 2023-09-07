@@ -1,0 +1,10 @@
+[
+    {
+        "name":   "metaSchema1",
+        "schema": "schema1"
+    },
+    {
+        "name":   "metaSchema2",
+        "schema": "schema2"
+    }
+]

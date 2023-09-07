@@ -161,7 +161,7 @@ func (r PolicyRepository) Upsert(ctx context.Context, pol policy.Policy) (string
 		case errors.Is(err, ErrForeignKeyViolation):
 			return "", fmt.Errorf("%w: %s", policy.ErrInvalidDetail, err)
 		default:
-			return "", fmt.Errorf("%w: %s", dbErr, err)
+			return "", fmt.Errorf("%w: %s", ErrQueryRun, err)
 		}
 	}
 

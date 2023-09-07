@@ -199,7 +199,7 @@ func (r GroupRepository) List(ctx context.Context, flt group.Filter) ([]group.Gr
 		case errors.Is(err, ErrInvalidTextRepresentation):
 			return []group.Group{}, nil
 		default:
-			return []group.Group{}, fmt.Errorf("%w: %s", dbErr, err)
+			return []group.Group{}, fmt.Errorf("%w: %s", ErrQueryRun, err)
 		}
 	}
 
@@ -258,7 +258,7 @@ func (r GroupRepository) UpdateByID(ctx context.Context, grp group.Group) (group
 		case errors.Is(err, ErrForeignKeyViolation):
 			return group.Group{}, organization.ErrNotExist
 		default:
-			return group.Group{}, fmt.Errorf("%w: %s", dbErr, err)
+			return group.Group{}, fmt.Errorf("%w: %s", ErrQueryRun, err)
 		}
 	}
 
@@ -302,7 +302,7 @@ func (r GroupRepository) ListGroupRelations(ctx context.Context, objectId string
 		if errors.Is(err, sql.ErrNoRows) {
 			return []relation.Relation{}, nil
 		}
-		return []relation.Relation{}, fmt.Errorf("%w: %s", dbErr, err)
+		return []relation.Relation{}, fmt.Errorf("%w: %s", ErrQueryRun, err)
 	}
 
 	var transformedRelations []relation.Relation

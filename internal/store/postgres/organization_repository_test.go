@@ -279,6 +279,11 @@ func (s *OrganizationRepositoryTestSuite) TestList() {
 					State:    organization.Enabled,
 					Metadata: metadata.Metadata{},
 				},
+				{
+					Name:     "org-3",
+					State:    organization.Enabled,
+					Metadata: metadata.Metadata{},
+				},
 			},
 		},
 		{

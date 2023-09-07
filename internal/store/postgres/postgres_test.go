@@ -7,10 +7,17 @@ import (
 	"os"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/raystack/frontier/internal/bootstrap/schema"
 
+	"github.com/raystack/frontier/core/authenticate"
+	"github.com/raystack/frontier/core/authenticate/session"
+	"github.com/raystack/frontier/core/domain"
 	"github.com/raystack/frontier/core/invitation"
+	"github.com/raystack/frontier/core/metaschema"
 	"github.com/raystack/frontier/core/permission"
+	"github.com/raystack/frontier/core/preference"
+	"github.com/raystack/frontier/core/serviceuser"
 
 	"github.com/ory/dockertest"
 	"github.com/ory/dockertest/docker"
@@ -181,6 +188,172 @@ func bootstrapPermissions(client *db.Client) ([]permission.Permission, error) {
 		}
 
 		insertedData = append(insertedData, act)
+	}
+	return insertedData, nil
+}
+
+func bootstrapSession(client *db.Client, users []user.User) ([]session.Session, error) {
+	sessionRepository := postgres.NewSessionRepository(log.NewLogrus(), client)
+	testFixtureJSON, err := os.ReadFile("./testdata/mock-session.json")
+	if err != nil {
+		return nil, err
+	}
+
+	var data []session.Session
+	if err = json.Unmarshal(testFixtureJSON, &data); err != nil {
+		return nil, err
+	}
+	for idx := range data {
+		data[idx].UserID = users[idx].ID
+		data[idx].ID = uuid.New()
+		err := sessionRepository.Set(context.Background(), &data[idx])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return data, nil
+}
+
+func bootstrapPreference(client *db.Client, namespce []namespace.Namespace) ([]preference.Preference, error) {
+	preferenceRepository := postgres.NewPreferenceRepository(client)
+	testFixtureJSON, err := os.ReadFile("./testdata/mock-preference.json")
+	if err != nil {
+		return nil, err
+	}
+	var data []preference.Preference
+	if err = json.Unmarshal(testFixtureJSON, &data); err != nil {
+		return nil, err
+	}
+
+	var insertedData []preference.Preference
+	for _, d := range data {
+		d.ResourceType = schema.OrganizationNamespace
+		d.ResourceID = uuid.New().String()
+		act, err := preferenceRepository.Set(context.Background(), d)
+		if err != nil {
+			return nil, err
+		}
+
+		insertedData = append(insertedData, act)
+	}
+	return insertedData, nil
+}
+
+func bootstrapDomain(client *db.Client, orgs []organization.Organization) ([]domain.Domain, error) {
+	domainRepository := postgres.NewDomainRepository(log.NewLogrus(), client)
+	testFixtureJSON, err := os.ReadFile("./testdata/mock-domain.json")
+	if err != nil {
+		return nil, err
+	}
+	var data []domain.Domain
+	if err = json.Unmarshal(testFixtureJSON, &data); err != nil {
+		return nil, err
+	}
+	var insertedData []domain.Domain
+	for i, d := range data {
+		d.OrgID = orgs[i].ID
+		domainR, err := domainRepository.Create(context.Background(), d)
+		if err != nil {
+			return nil, err
+		}
+		insertedData = append(insertedData, domainR)
+	}
+	return insertedData, nil
+}
+
+func bootstrapFlow(client *db.Client) ([]authenticate.Flow, error) {
+	flowRepository := postgres.NewFlowRepository(log.NewLogrus(), client)
+	testFixtureJSON, err := os.ReadFile("./testdata/mock-flow.json")
+	if err != nil {
+		return nil, err
+	}
+	var data []authenticate.Flow
+	if err = json.Unmarshal(testFixtureJSON, &data); err != nil {
+		return nil, err
+	}
+	var insertedData []authenticate.Flow
+	for _, d := range data {
+		err := flowRepository.Set(context.Background(), &d)
+		if err != nil {
+			return nil, err
+		}
+		domain, err := flowRepository.Get(context.Background(), d.ID)
+		if err != nil {
+			return nil, err
+		}
+		insertedData = append(insertedData, *domain)
+	}
+	return insertedData, nil
+}
+
+func bootstrapServiceUser(client *db.Client) ([]serviceuser.ServiceUser, error) {
+	serviceUserRepository := postgres.NewServiceUserRepository(client)
+	testFixtureJSON, err := os.ReadFile("./testdata/mock-serviceuser.json")
+	if err != nil {
+		return nil, err
+	}
+
+	var data []serviceuser.ServiceUser
+	if err = json.Unmarshal(testFixtureJSON, &data); err != nil {
+		return nil, err
+	}
+	data[0].OrgID = uuid.New().String()
+	data[1].OrgID = uuid.New().String()
+
+	var insertedData []serviceuser.ServiceUser
+	for _, d := range data {
+		d.OrgID = uuid.New().String()
+		serviceU, err := serviceUserRepository.Create(context.Background(), d)
+		if err != nil {
+			return nil, err
+		}
+		insertedData = append(insertedData, serviceU)
+	}
+	return insertedData, nil
+}
+
+func bootstrapServiceUserCredential(client *db.Client, servUsers []serviceuser.ServiceUser) ([]serviceuser.Credential, error) {
+	serviceUserCredRepository := postgres.NewServiceUserCredentialRepository(client)
+	testFixtureJSON, err := os.ReadFile("./testdata/mock-serviceuser-credential.json")
+	if err != nil {
+		return nil, err
+	}
+
+	var data []serviceuser.Credential
+	if err = json.Unmarshal(testFixtureJSON, &data); err != nil {
+		return nil, err
+	}
+
+	var insertedData []serviceuser.Credential
+	for idx, d := range data {
+		d.ServiceUserID = servUsers[idx].ID
+		d.SecretHash = []byte("randomhash")
+		serviceU, err := serviceUserCredRepository.Create(context.Background(), d)
+		if err != nil {
+			return nil, err
+		}
+		insertedData = append(insertedData, serviceU)
+	}
+	return insertedData, nil
+}
+
+func bootstrapMetaSchema(client *db.Client) ([]metaschema.MetaSchema, error) {
+	metaschemaRepository := postgres.NewMetaSchemaRepository(log.NewLogrus(), client)
+	testFixtureJSON, err := os.ReadFile("./testdata/mock-metaschema.json")
+	if err != nil {
+		return nil, err
+	}
+	var data []metaschema.MetaSchema
+	if err = json.Unmarshal(testFixtureJSON, &data); err != nil {
+		return nil, err
+	}
+	var insertedData []metaschema.MetaSchema
+	for _, d := range data {
+		domain, err := metaschemaRepository.Create(context.Background(), d)
+		if err != nil {
+			return nil, err
+		}
+		insertedData = append(insertedData, domain)
 	}
 	return insertedData, nil
 }

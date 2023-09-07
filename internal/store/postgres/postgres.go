@@ -12,11 +12,11 @@ import (
 )
 
 var (
-	parseErr = errors.New("parsing error")
-	queryErr = errors.New("error while creating the query")
-	dbErr    = errors.New("error while running query")
-	txnErr   = errors.New("error while running transaction")
-	dialect  = goqu.Dialect("postgres")
+	parseErr    = errors.New("parsing error")
+	queryErr    = errors.New("error while creating the query")
+	ErrQueryRun = errors.New("error while running query")
+	txnErr      = errors.New("error while running transaction")
+	dialect     = goqu.Dialect("postgres")
 )
 
 const (
