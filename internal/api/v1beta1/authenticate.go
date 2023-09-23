@@ -12,6 +12,7 @@ import (
 
 	"github.com/raystack/frontier/internal/bootstrap/schema"
 	"go.uber.org/zap"
+	structpb "google.golang.org/protobuf/types/known/structpb"
 
 	"github.com/lestrrat-go/jwx/v2/jwk"
 
@@ -88,12 +89,16 @@ func (h Handler) Authenticate(ctx context.Context, request *frontierv1beta1.Auth
 			return nil, status.Error(codes.Internal, err.Error())
 		}
 	}
-
+	stateOptions, err := structpb.NewStruct(response.StateConfig)
+	if err != nil {
+		return nil, err
+	}
 	return &frontierv1beta1.AuthenticateResponse{
 		Endpoint: response.Flow.StartURL,
 
 		// Note(kushsharma): can we can also store the state in cookie and validate it on callback?
-		State: response.State,
+		State:        response.State,
+		StateOptions: stateOptions,
 	}, nil
 }
 
@@ -102,9 +107,10 @@ func (h Handler) AuthCallback(ctx context.Context, request *frontierv1beta1.Auth
 
 	// handle callback
 	response, err := h.authnService.FinishFlow(ctx, authenticate.RegistrationFinishRequest{
-		Method: request.GetStrategyName(),
-		Code:   request.GetCode(),
-		State:  request.GetState(),
+		Method:      request.GetStrategyName(),
+		Code:        request.GetCode(),
+		State:       request.GetState(),
+		StateConfig: request.GetStateOptions().AsMap(),
 	})
 	if err != nil {
 		logger.Error(err.Error())

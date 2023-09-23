@@ -5,13 +5,14 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"github.com/lestrrat-go/jwx/v2/jwk"
-	"github.com/lestrrat-go/jwx/v2/jwt"
 	"html/template"
 	"io"
 	"net/http"
 	"net/url"
+
+	"github.com/gin-gonic/gin"
+	"github.com/lestrrat-go/jwx/v2/jwk"
+	"github.com/lestrrat-go/jwx/v2/jwt"
 )
 
 const (
@@ -25,6 +26,7 @@ const (
 
 	mailotpStrategy  = "mailotp"
 	maillinkStrategy = "maillink"
+	passkeyStrategy  = "passkey"
 )
 
 var (
@@ -54,6 +56,7 @@ func main() {
 	r.GET("/login", login())
 	r.GET("/oauth", oauth())
 	r.GET("/mailauth", mailauth())
+	r.GET("/passkeyauth", passkeyauth())
 	r.GET("/token", token())
 	r.POST("/token", token())
 	r.GET("/callback", callback())
@@ -108,7 +111,7 @@ func login() func(ctx *gin.Context) {
 
 		content := `<div><h3>Supported Providers:</h3>`
 		for _, strategy := range response.Strategies {
-			if strategy.Name == mailotpStrategy || strategy.Name == maillinkStrategy {
+			if strategy.Name == mailotpStrategy || strategy.Name == maillinkStrategy || strategy.Name == passkeyStrategy {
 				content += `<article>`
 				content += `<div>` + strategy.Name + `</div>`
 				content += `<form action="/mailauth" method="get">`
@@ -211,6 +214,19 @@ func mailauth() func(ctx *gin.Context) {
 			"title":   "Authentication demo",
 			"page":    "Mail OTP verify",
 			"content": template.HTML(content),
+		})
+	}
+}
+
+func passkeyauth() func(ctx *gin.Context) {
+	return func(ctx *gin.Context) {
+		ctx.HTML(http.StatusOK, "index.html", gin.H{
+			"title": "Authentication demo",
+			"page":  "PassKey verif",
+			"content": template.HTML(`<h1>PassKey Authentication</h1>
+			<input type="text" name="username" id="email" placeholder="i.e. foo@bar.com">
+			<button onclick="registerUser()">Register</button>
+			<button onclick="loginUser()">Login</button>`),
 		})
 	}
 }
@@ -336,10 +352,10 @@ func token() func(ctx *gin.Context) {
 			}
 			// token ready to use
 			tokenHTML = `Authentication successful via client credentials. 
-<h4>User Token:</h4>
-<article>` + tokenResp.AccessToken + `</article>
-<h4>Claims:</h4>
-<article>` + fmt.Sprintf("%v", tokenClaims) + `</article>`
+			<h4>User Token:</h4>
+			<article>` + tokenResp.AccessToken + `</article>
+			<h4>Claims:</h4>
+			<article>` + fmt.Sprintf("%v", tokenClaims) + `</article>`
 		}
 
 		ctx.HTML(http.StatusOK, "index.html", gin.H{
