@@ -246,9 +246,12 @@ func buildAPIDependencies(
 	}
 	webAuthConfig, err := webauthn.New(wconfig)
 	if err != nil {
-		return api.Deps{}, fmt.Errorf("failed to parse passkey config: %w", err)
+		if wconfig.RPDisplayName == "" && wconfig.RPID == "" && wconfig.RPOrigins == nil {
+			webAuthConfig = &webauthn.WebAuthn{}
+		} else {
+			return api.Deps{}, fmt.Errorf("failed to parse passkey config: %w", err)
+		}
 	}
-
 	authnService := authenticate.NewService(logger, cfg.App.Authentication,
 		postgres.NewFlowRepository(logger, dbc), mailDialer, tokenService, sessionService, userService, serviceUserService, webAuthConfig)
 
