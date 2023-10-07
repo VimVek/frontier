@@ -87,16 +87,39 @@ func (h Handler) Authenticate(ctx context.Context, request *frontierv1beta1.Auth
 			return nil, status.Error(codes.Internal, err.Error())
 		}
 	}
-	stateOptions, err := structpb.NewStruct(response.StateConfig)
-	if err != nil {
-		return nil, err
+
+	if request.GetStrategyName() == "passkey" {
+		userCredentils := &structpb.Value{}
+		err = userCredentils.UnmarshalJSON(response.StateConfig["options"].([]byte))
+		if err != nil {
+			return nil, err
+		}
+		typeValue, ok := response.StateConfig["type"].(string)
+		if !ok {
+			return nil, err
+		}
+		stringValue := &structpb.Value{
+			Kind: &structpb.Value_StringValue{
+				StringValue: typeValue,
+			},
+		}
+		stateOptionsValue := &structpb.Struct{
+			Fields: map[string]*structpb.Value{
+				"options": userCredentils,
+				"type":    stringValue,
+			},
+		}
+		return &frontierv1beta1.AuthenticateResponse{
+			Endpoint:     response.Flow.StartURL,
+			State:        response.State,
+			StateOptions: stateOptionsValue,
+		}, nil
 	}
+
 	return &frontierv1beta1.AuthenticateResponse{
 		Endpoint: response.Flow.StartURL,
-
 		// Note(kushsharma): can we can also store the state in cookie and validate it on callback?
-		State:        response.State,
-		StateOptions: stateOptions,
+		State: response.State,
 	}, nil
 }
 

@@ -4,9 +4,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/go-webauthn/webauthn/protocol"
 	"github.com/go-webauthn/webauthn/webauthn"
-	"github.com/google/uuid"
 )
 
 const (
@@ -14,7 +12,6 @@ const (
 )
 
 type UserData struct {
-	Email       string
 	Id          string
 	Name        string
 	DisplayName string
@@ -22,11 +19,11 @@ type UserData struct {
 	CreatedAt   time.Time
 }
 
-func NewPassKeyUser(email string) *UserData {
+func NewPassKeyUser(id string) *UserData {
 	user := &UserData{}
-	user.Id = uuid.New().String()
-	user.Email = email
-	user.DisplayName = strings.Split(email, "@")[0]
+	user.Id = id
+	user.Name = extractUsername(id)
+	user.DisplayName = extractUsername(id)
 	return user
 }
 
@@ -48,17 +45,10 @@ func (u *UserData) WebAuthnCredentials() []webauthn.Credential {
 	return u.Credentials
 }
 
-type PasskeyStartRequest struct {
-	Type    string
-	Options any
-}
-
-func (p *PasskeyStartRequest) ForRegisteration(opt *protocol.CredentialCreation) {
-	p.Type = "create"
-	p.Options = opt
-}
-
-func (p *PasskeyStartRequest) ForLogin(opt *protocol.CredentialAssertion) {
-	p.Type = "get"
-	p.Options = opt
+func extractUsername(email string) string {
+	parts := strings.Split(email, "@")
+	if len(parts) == 2 {
+		return parts[0]
+	}
+	return ""
 }

@@ -225,8 +225,7 @@ func passkeyauth() func(ctx *gin.Context) {
 			"page":  "PassKey verif",
 			"content": template.HTML(`<h1>PassKey Authentication</h1>
 			<input type="text" name="username" id="email" placeholder="i.e. foo@bar.com">
-			<button onclick="registerUser()">Register</button>
-			<button onclick="loginUser()">Login</button>`),
+			<button onclick="registerOrLoginUser()">Register/Login</button>`),
 		})
 	}
 }
