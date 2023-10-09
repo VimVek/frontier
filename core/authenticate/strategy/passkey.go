@@ -2,7 +2,6 @@ package strategy
 
 import (
 	"strings"
-	"time"
 
 	"github.com/go-webauthn/webauthn/webauthn"
 )
@@ -16,7 +15,6 @@ type UserData struct {
 	Name        string
 	DisplayName string
 	Credentials []webauthn.Credential
-	CreatedAt   time.Time
 }
 
 func NewPassKeyUser(id string) *UserData {

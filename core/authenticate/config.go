@@ -64,8 +64,7 @@ type MailLinkConfig struct {
 }
 
 type PassKeyConfig struct {
-	RPDisplayName string        `yaml:"rpdisplayname"`
-	RPID          string        `yaml:"rpid"`
-	RPOrigins     []string      `yaml:"rporigins"`
-	Validity      time.Duration `yaml:"validity" mapstructure:"validity" default:"10m"`
+	RPDisplayName string   `yaml:"rpdisplayname"`
+	RPID          string   `yaml:"rpid"`
+	RPOrigins     []string `yaml:"rporigins"`
 }
