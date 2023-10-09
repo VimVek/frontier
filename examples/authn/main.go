@@ -222,10 +222,12 @@ func passkeyauth() func(ctx *gin.Context) {
 	return func(ctx *gin.Context) {
 		ctx.HTML(http.StatusOK, "index.html", gin.H{
 			"title": "Authentication demo",
-			"page":  "PassKey verif",
+			"page":  "PassKey",
 			"content": template.HTML(`<h1>PassKey Authentication</h1>
 			<input type="text" name="username" id="email" placeholder="i.e. foo@bar.com">
 			<button onclick="registerOrLoginUser()">Register/Login</button>`),
+			"authUrl":     "http://localhost:8000/v1beta1/auth/register/passkey?email=",
+			"callbackUrl": "http://localhost:8000/v1beta1/auth/callback",
 		})
 	}
 }
