@@ -88,7 +88,7 @@ type Service struct {
 	internalTokenService token.Service
 	sessionService       SessionService
 	serviceUserService   ServiceUserService
-	web                  *webauthn.WebAuthn
+	webAuth              *webauthn.WebAuthn
 }
 
 func NewService(logger log.Logger, config Config, flowRepo FlowRepository,
@@ -107,7 +107,7 @@ func NewService(logger log.Logger, config Config, flowRepo FlowRepository,
 		internalTokenService: tokenService,
 		sessionService:       sessionService,
 		serviceUserService:   serviceUserService,
-		web:                  webAuthConfig,
+		webAuth:              webAuthConfig,
 	}
 	return r
 }
@@ -121,7 +121,7 @@ func (s Service) SupportedStrategies() []string {
 	if s.mailDialer != nil {
 		strategies = append(strategies, MailOTPAuthMethod.String(), MailLinkAuthMethod.String())
 	}
-	if s.config.PassKey.RPID != "" && len(s.config.PassKey.RPOrigins) != 0 {
+	if s.webAuth != nil {
 		strategies = append(strategies, PassKeyAuthMethod.String())
 	}
 	return strategies
@@ -179,7 +179,7 @@ func (s Service) StartFlow(ctx context.Context, request RegistrationStartRequest
 		if err != nil {
 			needRegistration = true
 		} else {
-			storedPasskey, passKeyExists := loggedInUser.Metadata["credentials"]
+			storedPasskey, passKeyExists := loggedInUser.Metadata["passkey_credentials"]
 			if !passKeyExists {
 				needRegistration = true
 			}
@@ -376,7 +376,7 @@ func (s Service) applyMailOTP(ctx context.Context, request RegistrationFinishReq
 }
 
 func (s Service) startPassKeyRegisterMethod(ctx context.Context, newPassKeyUser *strategy.UserData, flow *Flow) (*RegistrationStartResponse, error) {
-	options, session, err := s.web.BeginRegistration(newPassKeyUser)
+	options, session, err := s.webAuth.BeginRegistration(newPassKeyUser)
 	if err != nil {
 		return &RegistrationStartResponse{}, err
 	}
@@ -406,7 +406,7 @@ func (s Service) startPassKeyRegisterMethod(ctx context.Context, newPassKeyUser 
 }
 
 func (s Service) startPassKeyLoginMethod(ctx context.Context, newPassKeyUser *strategy.UserData, loggedInUser user.User, flow *Flow) (*RegistrationStartResponse, error) {
-	decodedCredBytes, err := base64.StdEncoding.DecodeString(loggedInUser.Metadata["credentials"].(string))
+	decodedCredBytes, err := base64.StdEncoding.DecodeString(loggedInUser.Metadata["passkey_credentials"].(string))
 	if err != nil {
 		return nil, err
 	}
@@ -417,7 +417,7 @@ func (s Service) startPassKeyLoginMethod(ctx context.Context, newPassKeyUser *st
 		return nil, err
 	}
 	newPassKeyUser.Credentials = webAuthCredentialData
-	options, session, err := s.web.BeginLogin(newPassKeyUser)
+	options, session, err := s.webAuth.BeginLogin(newPassKeyUser)
 	if err != nil {
 		return nil, err
 	}
@@ -472,15 +472,14 @@ func (s Service) finishPassKeyRegisterMethod(ctx context.Context, request Regist
 	var webAuthSessionData webauthn.SessionData
 	sessionBytes, err := base64.StdEncoding.DecodeString(sessionInterface.(string))
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	err = json.Unmarshal(sessionBytes, &webAuthSessionData)
 	if err != nil {
 		return nil, err
 	}
 	userFinishRegister.Id = string(webAuthSessionData.UserID)
-	session := webAuthSessionData
-	credential, err := s.web.CreateCredential(userFinishRegister, session, credentialCreationResponse)
+	credential, err := s.webAuth.CreateCredential(userFinishRegister, webAuthSessionData, credentialCreationResponse)
 	if err != nil {
 		return nil, err
 	}
@@ -498,7 +497,7 @@ func (s Service) finishPassKeyRegisterMethod(ctx context.Context, request Regist
 		return nil, err
 	}
 	credBase64 := base64.StdEncoding.EncodeToString(credBytes)
-	newUser.Metadata["credentials"] = credBase64
+	newUser.Metadata["passkey_credentials"] = credBase64
 	newUpdatedUser, err := s.userService.Update(ctx, newUser)
 	if err != nil {
 		return nil, err
@@ -549,7 +548,7 @@ func (s Service) finishPassKeyLoginMethod(ctx context.Context, request Registrat
 	if err != nil {
 		return nil, err
 	}
-	userCred, ok := existingUser.Metadata["credentials"]
+	userCred, ok := existingUser.Metadata["passkey_credentials"]
 	if !ok {
 		return nil, err
 	}
@@ -565,7 +564,7 @@ func (s Service) finishPassKeyLoginMethod(ctx context.Context, request Registrat
 	}
 	userFinishRegister.Credentials = webAuthCredentialData
 
-	_, err = s.web.ValidateLogin(userFinishRegister, webAuthSessionData, response)
+	_, err = s.webAuth.ValidateLogin(userFinishRegister, webAuthSessionData, response)
 	if err != nil {
 		return nil, err
 	}

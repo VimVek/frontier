@@ -237,7 +237,7 @@ func buildAPIDependencies(
 	webAuthConfig, err := webauthn.New(wconfig)
 	if err != nil {
 		if wconfig.RPDisplayName == "" && wconfig.RPID == "" && wconfig.RPOrigins == nil {
-			webAuthConfig = &webauthn.WebAuthn{}
+			webAuthConfig = nil
 		} else {
 			return api.Deps{}, fmt.Errorf("failed to parse passkey config: %w", err)
 		}
