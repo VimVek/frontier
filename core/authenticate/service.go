@@ -173,7 +173,6 @@ func (s Service) StartFlow(ctx context.Context, request RegistrationStartRequest
 	}
 
 	if request.Method == PassKeyAuthMethod.String() {
-		newPassKeyUser := strategy.NewPassKeyUser(request.Email)
 		needRegistration := false
 		loggedInUser, err := s.userService.GetByID(ctx, request.Email)
 		if err != nil {
@@ -189,14 +188,14 @@ func (s Service) StartFlow(ctx context.Context, request RegistrationStartRequest
 		}
 
 		if needRegistration {
-			response, err := s.startPassKeyRegisterMethod(ctx, newPassKeyUser, flow)
-			if err != nil && !errors.Is(err, ErrStrategyNotApplicable) {
+			response, err := s.startPassKeyRegisterMethod(ctx, request, flow)
+			if err != nil {
 				return nil, err
 			}
 			return response, nil
 		} else {
-			response, err := s.startPassKeyLoginMethod(ctx, newPassKeyUser, loggedInUser, flow)
-			if err != nil && !errors.Is(err, ErrStrategyNotApplicable) {
+			response, err := s.startPassKeyLoginMethod(ctx, request, loggedInUser, flow)
+			if err != nil {
 				return nil, err
 			}
 			return response, nil
@@ -293,18 +292,29 @@ func (s Service) FinishFlow(ctx context.Context, request RegistrationFinishReque
 		return response, nil
 	}
 
+	flowIdString := request.State
+	flowId, err := uuid.Parse(flowIdString)
+	if err != nil {
+		return nil, err
+	}
+	flow, err := s.flowRepo.Get(ctx, flowId)
+	if err != nil {
+		return nil, err
+	}
+
+	requestType := flow.Metadata["passkey_type"]
 	if request.Method == PassKeyAuthMethod.String() {
-		if request.StateConfig["type"] == "register" {
+		if requestType == "register" {
 			response, err := s.finishPassKeyRegisterMethod(ctx, request)
-			if err != nil && !errors.Is(err, ErrStrategyNotApplicable) {
+			if err != nil {
 				return nil, err
 			}
 			return response, nil
 		}
 
-		if request.StateConfig["type"] == "login" {
+		if requestType == "login" {
 			response, err := s.finishPassKeyLoginMethod(ctx, request)
-			if err != nil && !errors.Is(err, ErrStrategyNotApplicable) {
+			if err != nil {
 				return nil, err
 			}
 			return response, nil
@@ -375,37 +385,39 @@ func (s Service) applyMailOTP(ctx context.Context, request RegistrationFinishReq
 	}, nil
 }
 
-func (s Service) startPassKeyRegisterMethod(ctx context.Context, newPassKeyUser *strategy.UserData, flow *Flow) (*RegistrationStartResponse, error) {
+func (s Service) startPassKeyRegisterMethod(ctx context.Context, request RegistrationStartRequest, flow *Flow) (*RegistrationStartResponse, error) {
+	newPassKeyUser := strategy.NewPassKeyUser(request.Email)
 	options, session, err := s.webAuth.BeginRegistration(newPassKeyUser)
 	if err != nil {
-		return &RegistrationStartResponse{}, err
+		return nil, err
 	}
 
 	session.Challenge = base64.RawURLEncoding.EncodeToString([]byte(session.Challenge))
 	sessionInBytes, err := json.Marshal(session)
 	if err != nil {
-		return &RegistrationStartResponse{}, err
+		return nil, err
 	}
 	flow.Metadata["passkey_session"] = sessionInBytes
+	flow.Metadata["passkey_type"] = "register"
 	if err = s.flowRepo.Set(ctx, flow); err != nil {
 		return nil, err
 	}
 	optionsBytes, err := json.Marshal(options)
 	if err != nil {
-		return &RegistrationStartResponse{}, err
+		return nil, err
 	}
 
 	return &RegistrationStartResponse{
 		Flow:  flow,
 		State: flow.ID.String(),
 		StateConfig: map[string]any{
-			"type":    "register",
 			"options": optionsBytes,
 		},
 	}, nil
 }
 
-func (s Service) startPassKeyLoginMethod(ctx context.Context, newPassKeyUser *strategy.UserData, loggedInUser user.User, flow *Flow) (*RegistrationStartResponse, error) {
+func (s Service) startPassKeyLoginMethod(ctx context.Context, request RegistrationStartRequest, loggedInUser user.User, flow *Flow) (*RegistrationStartResponse, error) {
+	newPassKeyUser := strategy.NewPassKeyUser(request.Email)
 	decodedCredBytes, err := base64.StdEncoding.DecodeString(loggedInUser.Metadata["passkey_credentials"].(string))
 	if err != nil {
 		return nil, err
@@ -425,9 +437,10 @@ func (s Service) startPassKeyLoginMethod(ctx context.Context, newPassKeyUser *st
 	session.Challenge = base64.RawURLEncoding.EncodeToString([]byte(session.Challenge))
 	sessionInBytes, err := json.Marshal(session)
 	if err != nil {
-		return &RegistrationStartResponse{}, err
+		return nil, err
 	}
 	flow.Metadata["passkey_session"] = sessionInBytes
+	flow.Metadata["passkey_type"] = "login"
 	if err = s.flowRepo.Set(ctx, flow); err != nil {
 		return nil, err
 	}
@@ -440,7 +453,6 @@ func (s Service) startPassKeyLoginMethod(ctx context.Context, newPassKeyUser *st
 		Flow:  flow,
 		State: flow.ID.String(),
 		StateConfig: map[string]any{
-			"type":    "login",
 			"options": optionsBytes,
 		},
 	}, nil
@@ -460,7 +472,7 @@ func (s Service) finishPassKeyRegisterMethod(ctx context.Context, request Regist
 	flowIdString := request.State
 	flowId, err := uuid.Parse(flowIdString)
 	if err != nil {
-		return nil, ErrStrategyNotApplicable
+		return nil, err
 	}
 	flow, err := s.flowRepo.Get(ctx, flowId)
 	if err != nil {
@@ -523,7 +535,7 @@ func (s Service) finishPassKeyLoginMethod(ctx context.Context, request Registrat
 	flowIdString := request.State
 	flowId, err := uuid.Parse(flowIdString)
 	if err != nil {
-		return nil, ErrStrategyNotApplicable
+		return nil, err
 	}
 	flow, err := s.flowRepo.Get(ctx, flowId)
 	if err != nil {
@@ -552,7 +564,7 @@ func (s Service) finishPassKeyLoginMethod(ctx context.Context, request Registrat
 	if !ok {
 		return nil, err
 	}
-	// unmarshal userCred
+
 	decodedCredBytes, err := base64.StdEncoding.DecodeString(userCred.(string))
 	if err != nil {
 		return nil, err
