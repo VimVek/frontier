@@ -188,13 +188,13 @@ func (s Service) StartFlow(ctx context.Context, request RegistrationStartRequest
 		}
 
 		if needRegistration {
-			response, err := s.startPassKeyRegisterMethod(ctx, request, flow)
+			response, err := s.startPassKeyRegisterMethod(ctx, flow)
 			if err != nil {
 				return nil, err
 			}
 			return response, nil
 		} else {
-			response, err := s.startPassKeyLoginMethod(ctx, request, loggedInUser, flow)
+			response, err := s.startPassKeyLoginMethod(ctx, loggedInUser, flow)
 			if err != nil {
 				return nil, err
 			}
@@ -385,8 +385,8 @@ func (s Service) applyMailOTP(ctx context.Context, request RegistrationFinishReq
 	}, nil
 }
 
-func (s Service) startPassKeyRegisterMethod(ctx context.Context, request RegistrationStartRequest, flow *Flow) (*RegistrationStartResponse, error) {
-	newPassKeyUser := strategy.NewPassKeyUser(request.Email)
+func (s Service) startPassKeyRegisterMethod(ctx context.Context, flow *Flow) (*RegistrationStartResponse, error) {
+	newPassKeyUser := strategy.NewPassKeyUser(flow.Email)
 	options, session, err := s.webAuth.BeginRegistration(newPassKeyUser)
 	if err != nil {
 		return nil, err
@@ -416,8 +416,8 @@ func (s Service) startPassKeyRegisterMethod(ctx context.Context, request Registr
 	}, nil
 }
 
-func (s Service) startPassKeyLoginMethod(ctx context.Context, request RegistrationStartRequest, loggedInUser user.User, flow *Flow) (*RegistrationStartResponse, error) {
-	newPassKeyUser := strategy.NewPassKeyUser(request.Email)
+func (s Service) startPassKeyLoginMethod(ctx context.Context, loggedInUser user.User, flow *Flow) (*RegistrationStartResponse, error) {
+	newPassKeyUser := strategy.NewPassKeyUser(flow.Email)
 	decodedCredBytes, err := base64.StdEncoding.DecodeString(loggedInUser.Metadata["passkey_credentials"].(string))
 	if err != nil {
 		return nil, err
