@@ -33,9 +33,8 @@ var (
 	// frontierHost which is running locally and configured with oidc parameters
 	// it should have client id, secret, issuer and an oidc callback endpoint
 	// for this example we are using ourselves as a frontend to frontier backend
-	frontierHost = "http://localhost:7400"
-	appHost      = "localhost:8888"
-
+	frontierHost       = "http://localhost:7400"
+	appHost            = "localhost:8888"
 	returnAfterAuthURL = url.QueryEscape("http://" + appHost + "/profile")
 )
 
@@ -220,14 +219,16 @@ func mailauth() func(ctx *gin.Context) {
 
 func passkeyauth() func(ctx *gin.Context) {
 	return func(ctx *gin.Context) {
+		authUrl, _ := url.JoinPath(frontierHost, frontierRegister, passkeyStrategy)
+		callbackUrl, _ := url.JoinPath(frontierHost, frontierRegisterCallback)
 		ctx.HTML(http.StatusOK, "index.html", gin.H{
 			"title": "Authentication demo",
 			"page":  "PassKey",
 			"content": template.HTML(`<h1>PassKey Authentication</h1>
 			<input type="text" name="username" id="email" placeholder="i.e. foo@bar.com">
 			<button onclick="registerOrLoginUser()">Register/Login</button>`),
-			"authUrl":     "http://localhost:8000/v1beta1/auth/register/passkey?email=",
-			"callbackUrl": "http://localhost:8000/v1beta1/auth/callback",
+			"authUrl":     authUrl + "?email=",
+			"callbackUrl": callbackUrl,
 		})
 	}
 }

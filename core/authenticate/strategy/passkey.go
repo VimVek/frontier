@@ -7,7 +7,9 @@ import (
 )
 
 const (
-	PasskeyAuthMethod string = "passkey"
+	PasskeyAuthMethod   string = "passkey"
+	PasskeyRegisterType string = "register"
+	PasskeyLoginType    string = "login"
 )
 
 type UserData struct {
@@ -22,6 +24,15 @@ func NewPassKeyUser(id string) *UserData {
 	user.Id = id
 	user.Name = extractUsername(id)
 	user.DisplayName = extractUsername(id)
+	return user
+}
+
+func NewPasskeyUserWithCredentials(id string, webAuthCredentialData []webauthn.Credential) *UserData {
+	user := &UserData{}
+	user.Id = id
+	user.Name = extractUsername(id)
+	user.DisplayName = extractUsername(id)
+	user.Credentials = webAuthCredentialData
 	return user
 }
 

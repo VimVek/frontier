@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <head>
 	<link rel="stylesheet" href="https://unpkg.com/@picocss/pico@1.*/css/pico.min.css">
-	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
 </head>
 <body>
 	<main class="container">
@@ -73,42 +72,41 @@
 			credentialCreationOptions.state_options.options.publicKey.user.id = bufferDecode(credentialCreationOptions.state_options.options.publicKey.user.id);
 		
 			try {
-			const credential = await navigator.credentials.create({
-				publicKey: credentialCreationOptions.state_options.options.publicKey,
-				attestation: 'none',
-			});
-		
-			let attestationObject = credential.response.attestationObject;
-			let clientDataJSON = credential.response.clientDataJSON;
-			let rawId = credential.rawId;
-		
-			const callBackResponse = await fetch('{{ .callbackUrl }}', {
-				method: 'POST',
-				body: JSON.stringify({
-					"strategy_name": "passkey",
-					"state": flow_id,
-					"state_options": {
-						"type": "register",
-						"options": JSON.stringify({
-							username: username,
-							id: credential.id,
-							type: credential.type,
-							rawId: bufferEncode(rawId),
-							response: {
-								attestationObject: bufferEncode(attestationObject),
-								clientDataJSON: bufferEncode(clientDataJSON),
-							},
-						})
-					}
-				}),
-			});
-		
-			if (callBackResponse.ok) {
-				const successData = await callBackResponse.json();
-				alert("successfully registered " + username + "!");
-			} else {
-				alert("failed to register " + username);
-			}
+				const credential = await navigator.credentials.create({
+					publicKey: credentialCreationOptions.state_options.options.publicKey,
+					attestation: 'none',
+				});
+			
+				let attestationObject = credential.response.attestationObject;
+				let clientDataJSON = credential.response.clientDataJSON;
+				let rawId = credential.rawId;
+			
+				const callBackResponse = await fetch('{{ .callbackUrl }}', {
+					method: 'POST',
+					body: JSON.stringify({
+						"strategy_name": "passkey",
+						"state": flow_id,
+						"state_options": {
+							"options": JSON.stringify({
+								username: username,
+								id: credential.id,
+								type: credential.type,
+								rawId: bufferEncode(rawId),
+								response: {
+									attestationObject: bufferEncode(attestationObject),
+									clientDataJSON: bufferEncode(clientDataJSON),
+								},
+							})
+						}
+					}),
+				});
+			
+				if (callBackResponse.ok) {
+					const successData = await callBackResponse.json();
+					alert("successfully registered " + username + "!");
+				} else {
+					alert("failed to register " + username);
+				}
 			} catch (err) {
 				alert("failed to register " + username);
 			}
@@ -147,7 +145,6 @@
 						"strategy_name": "passkey",
 						"state": flow_id,
 						"state_options": {
-							"type": "login",
 							"options": JSON.stringify({
 								id: assertion.id,
 								rawId: bufferEncode(rawId),
@@ -172,7 +169,7 @@
 			} catch (error) {
 				alert("failed to login " + username);
 			}
-			}
+		}
 
 		function base64urlToBuffer(baseurl64String) {
 			// Base64url to Base64

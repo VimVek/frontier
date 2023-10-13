@@ -92,8 +92,7 @@ func (h Handler) Authenticate(ctx context.Context, request *frontierv1beta1.Auth
 
 	if request.GetStrategyName() == authenticate.PassKeyAuthMethod.String() {
 		userCredentils := &structpb.Value{}
-		err = userCredentils.UnmarshalJSON(response.StateConfig["options"].([]byte))
-		if err != nil {
+		if err = userCredentils.UnmarshalJSON(response.StateConfig["options"].([]byte)); err != nil {
 			return nil, err
 		}
 		typeValue, ok := response.Flow.Metadata["passkey_type"].(string)
